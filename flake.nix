@@ -53,8 +53,10 @@
           ];
         };
         devShells.default = pkgs.mkShell {
-          buildInputs = [
-            self.packages."${system}".arduino-cli
+          buildInputs = with pkgs; [
+            self.packages."${system}".arduino-cli # For compiling and uploading
+            picocom # To monitor the serial output
+            gnumake # To provide Makefile support
           ];
         };
       }
