@@ -26,40 +26,37 @@
     arduino-package-rp2040-index,
     arduino-library-index,
     ...
-  } @ attrs: let
+  }: let
     overlays = [
-      (arduino-nix.overlay)
+      arduino-nix.overlay
       (arduino-nix.mkArduinoPackageOverlay (arduino-package-index + "/package_index.json"))
       (arduino-nix.mkArduinoPackageOverlay (arduino-package-rp2040-index + "/package_rp2040_index.json"))
       (arduino-nix.mkArduinoLibraryOverlay (arduino-library-index + "/library_index.json"))
     ];
-  in (flake-utils.lib.eachDefaultSystem (
-    system: let
-      pkgs = (import nixpkgs) {
-        inherit system overlays;
-      };
-    in rec {
-      packages.arduino-cli = pkgs.wrapArduinoCLI {
-        libraries = with pkgs.arduinoLibraries; [
-          (arduino-nix.latestVersion Servo)
-          (arduino-nix.latestVersion IRremote)
-          # (arduino-nix.latestVersion ADS1X15)
-          # (arduino-nix.latestVersion Ethernet_Generic)
-          # (arduino-nix.latestVersion SCL3300)
-          # (arduino-nix.latestVersion TMCStepper)
-          # (arduino-nix.latestVersion pkgs.arduinoLibraries."Adafruit PWM Servo Driver Library")
-        ];
+  in
+    flake-utils.lib.eachDefaultSystem (
+      system: let
+        pkgs = (import nixpkgs) {
+          inherit system overlays;
+        };
+      in {
+        packages.arduino-cli = pkgs.wrapArduinoCLI {
+          libraries = with pkgs.arduinoLibraries; [
+            (arduino-nix.latestVersion Servo)
+            (arduino-nix.latestVersion IRremote)
+            (arduino-nix.latestVersion NewPing)
+            (arduino-nix.latestVersion ezButton)
+          ];
 
-        packages = with pkgs.arduinoPackages; [
-          platforms.arduino.avr."1.6.23"
-          # platforms.rp2040.rp2040."2.3.3"
-        ];
-      };
-      devShells.default = pkgs.mkShell {
-        buildInputs = [
-          self.packages."${system}".arduino-cli
-        ];
-      };
-    }
-  ));
+          packages = with pkgs.arduinoPackages; [
+            platforms.arduino.avr."1.6.23"
+          ];
+        };
+        devShells.default = pkgs.mkShell {
+          buildInputs = [
+            self.packages."${system}".arduino-cli
+          ];
+        };
+      }
+    );
 }
